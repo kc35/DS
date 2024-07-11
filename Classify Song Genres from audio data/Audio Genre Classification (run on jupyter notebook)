@@ -33,11 +33,11 @@ warnings.filterwarnings('ignore')
 %matplotlib inline
 
 print("The genres present in the dataset are:")
-print(os.listdir(r"C:\Users\Audio Classification\GTZAN\Data\genres_original"))
+print(os.listdir(r"Insert_directory"))
 
-y, sr = librosa.load(r"C:\Users\Audio Classification\GTZAN\Data\genres_original\blues\blues.00032.wav")
+y, sr = librosa.load(r"insert blues 000 file location address")
 
-data = pd.read_csv(r"C:\Users\Audio Classification\GTZAN\Data\features_3_sec.csv")
+data = pd.read_csv(r"features_3_sec.csv")
 print(data.shape)
 
 data.head()
