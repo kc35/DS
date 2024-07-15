@@ -1,1 +1,0 @@
-change "data=df[['text','target']]" to "data=df[['text','target']].copy()"
