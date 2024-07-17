@@ -1,13 +1,10 @@
 import re
 import numpy as np
 import pandas as pd
-# plotting
 import seaborn as sns
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
-# nltk
 from nltk.stem import WordNetLemmatizer
-# sklearn
 from sklearn.svm import LinearSVC
 from sklearn.naive_bayes import BernoulliNB
 from sklearn.linear_model import LogisticRegression
@@ -15,7 +12,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import confusion_matrix, classification_report
 
-# Importing the dataset
 DATASET_COLUMNS=['target','ids','date','flag','user','text']
 DATASET_ENCODING = "ISO-8859-1"
 df = pd.read_csv('D:\DS\Twitter Sentiment Analysis\Project_Data.csv', encoding=DATASET_ENCODING, names=DATASET_COLUMNS)
@@ -35,11 +31,8 @@ print('Count of rows in the data is:  ', len(df))
 df['target'].unique()
 df['target'].nunique()
 
-
-# Plotting the distribution for dataset.
 ax = df.groupby('target').count().plot(kind='bar', title='Distribution of data',legend=False)
 ax.set_xticklabels(['Negative','Positive'], rotation=0)
-# Storing data in lists.
 text, sentiment = list(df['text']), list(df['target'])
 
 import seaborn as sns
@@ -143,7 +136,6 @@ wc = WordCloud(max_words = 1000 , width = 1600 , height = 800,
 plt.figure(figsize = (20,20))
 plt.imshow(wc)
 
-# Separating the 95% data for training data and 5% for testing data
 X_train, X_test, y_train, y_test = train_test_split(X,y,test_size = 0.05, random_state =26105111)
 
 vectoriser = TfidfVectorizer(ngram_range=(1,2), max_features=500000)
