@@ -1,1 +1,8 @@
+Run on idle environment
+Change:
+"for folder in os.listdir(directory):"
+to
+"for file in os.listdir(directory+"/"+folder):"to prevent error
+add r to the directory to make raw string, directory = r"my_path"
 
+Change path of directory to outside current user not just onedrive for it find path. 
