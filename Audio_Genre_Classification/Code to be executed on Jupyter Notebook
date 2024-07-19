@@ -1,0 +1,130 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+import librosa
+import librosa.display
+import IPython.display as ipd
+import warnings
+import os
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.decomposition import PCA
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+import soundfile as sf
+
+from sklearn.model_selection import cross_val_score
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.svm import SVC
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
+from sklearn.model_selection import GridSearchCV
+
+from tensorflow.keras.models import Sequential, load_model
+from tensorflow.keras.layers import Dense, Dropout
+from keras.optimizers import Adam
+from tensorflow.keras.regularizers import l2
+import pickle
+warnings.filterwarnings('ignore')
+%matplotlib inline
+
+print("The genres present in the dataset are:")
+print(os.listdir(r"Insert_directory"))
+
+y, sr = librosa.load(r"insert blues 000 file location address")
+
+data = pd.read_csv(r"features_3_sec.csv")
+print(data.shape)
+
+data.head()
+
+data.info()
+
+data.describe()
+
+# Box plot of label vs tempo
+x = data[["label", "tempo"]]
+
+f, ax = plt.subplots(figsize=(16, 9));
+sns.boxplot(x = "label", y = "tempo", data = x, palette = 'Blues')
+
+plt.show()
+
+# Heat map for the mean variables
+mean_cols = [col for col in data.columns if 'mean' in col]
+
+corr = data[mean_cols].corr()
+f, ax = plt.subplots(figsize=(16, 11))
+
+sns.heatmap(corr, cmap = 'Blues')
+plt.title('Correlation Heatmap (for the MEAN variables)', fontsize = 20)
+plt.xticks(fontsize = 10)
+plt.yticks(fontsize = 10)
+
+plt.show()
+
+data.drop_duplicates()
+data.drop(['filename','length'], axis = 1, inplace = True)
+X = data.iloc[:,:-1]
+Y = data.iloc[:,-1]
+Y
+scaler = MinMaxScaler()
+scaled_data = scaler.fit_transform(X)
+columns = X.columns
+X_scaled = pd.DataFrame(scaled_data, columns = columns)
+X_scaled.head()
+
+for i in range(1,57):
+    pca_dummy = PCA(n_components = i)
+
+    dummy_trans = pca_dummy.fit_transform(X_scaled)
+
+    print("For", i,"number of components Explained Variance Ratio =", pca_dummy.explained_variance_ratio_.cumsum()[i-1])
+
+
+# 90% of variance can be explained using 24 components
+pca = PCA(n_components = 24)
+components = pca.fit_transform(X_scaled)
+
+X_pca = pd.DataFrame(components)
+# Splitting the reduced data in train & test part
+
+X_train, X_test, y_train, y_test = train_test_split(X_pca,Y, test_size=0.2, random_state=30)
+X_train
+
+
+# Setting up the parameter grid for KNN
+param_found_knn = 1
+
+knn_params = {
+    'n_neighbors': range(1, 21),  # Considering a range that isn't too broad
+    'weights': ['uniform', 'distance'],
+    'metric': ['euclidean', 'manhattan']  # Adding different distance metrics
+}
+knn_grid = GridSearchCV(KNeighborsClassifier(), knn_params, cv=5, scoring='accuracy', verbose=1)
+
+if not param_found_knn:
+    knn_grid.fit(X_train, y_train)
+
+    # Best parameters and best score
+    print("Best parameters for KNN:", knn_grid.best_params_)
+    print("Best cross-validation score for KNN:", knn_grid.best_score_)
+
+else:
+    knn_grid.best_params_ = {'metric': 'manhattan', 'n_neighbors': 4, 'weights': 'distance'}
+
+
+# Training KNN with the best parameters
+knn_best = KNeighborsClassifier(**knn_grid.best_params_)
+knn_best.fit(X_train, y_train)
+y_pred_knn_test = knn_best.predict(X_test)
+y_pred_knn_train = knn_best.predict(X_train)
+
+# Evaluation
+knn_accuracy_test = accuracy_score(y_test, y_pred_knn_test)
+knn_accuracy_train = accuracy_score(y_train, y_pred_knn_train)
+knn_report = classification_report(y_test, y_pred_knn_test, output_dict=True)
+print("Accuracy using KNN =", knn_accuracy_test)
